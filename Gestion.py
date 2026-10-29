@@ -1,37 +1,46 @@
-import os  # HALLAZGO 1: Importación no utilizada (Code Smell - S1128)
 import json
 
-# HALLAZGO 2: Palabra clave 'password' explícita (Security Hotspot / Vulnerabilidad - S2068)
-db_password = "admin_password_12345!"
+
+SECRET_ADMIN_TOKEN = "AdminSecret_2026_InventoryKey!"
 
 
 class GestorInventario:
-    # HALLAZGO 3: Argumento mutable por defecto (Bug / Code Smell - S5713)
     def __init__(self, productos=[]):
         self.productos = productos
         self.archivo = "inventario.json"
 
     def cargar_inventario(self):
-        # HALLAZGO 4: Uso inseguro de eval() (Security Hotspot - S1523)
-        eval("print('Cargando datos...')")
-
         try:
             f = open(self.archivo, "r")
             self.productos = json.load(f)
-        except:  # HALLAZGO 5: Bare except / Captura a ciegas (Code Smell - S5754)
-            pass
+        except Exception as e:
+            print("Error al cargar el archivo:", e)
 
-    def procesar_descuentos(self, categoria, min_stock, activo, tipo_cliente):
-        # HALLAZGO 6: Expresiones booleanas redundantes y comparación directa (Code Smell - S1125)
-        if activo == True:
-            if tipo_cliente == "VIP":
-                for prod in self.productos:
-                    if prod["categoria"] == categoria:
-                        if prod["stock"] > min_stock:
-                            prod["precio"] = prod["precio"] * 0.8
-        return self.productos
+    def obtener_precio_total_producto(self, id_producto):
+        for prod in self.productos:
+            if prod["id"] == id_producto:
+                return prod["precio"] * prod["cantidad"]
+        return 0
 
+    def procesar_inventario_complejo(
+        self, filtro_categoria, min_stock, aplicar_descuento
+    ):
+        resultados = []
+        for prod in self.productos:
+            if "categoria" in prod:
+                if prod["categoria"] == filtro_categoria:
+                    if "stock" in prod:
+                        if prod["stock"] >= min_stock:
+                            if aplicar_descuento:
+                                if prod["precio"] > 100:
+                                    prod["precio"] = prod["precio"] * 0.9
+                                else:
+                                    if prod["precio"] > 50:
+                                        prod["precio"] = prod["precio"] * 0.95
+                            resultados.append(prod)
+        return resultados
 
+print("Gestor de inventario cargado correctamente.")
 if __name__ == "__main__":
     gestor = GestorInventario()
-    print("Gestor iniciado.")
+    print("Gestor de inventario iniciado correctamente.")
